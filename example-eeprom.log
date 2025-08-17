@@ -1,0 +1,36 @@
+9   37  0   0   0   0   0   0   210
+8   2   0   0   8   13  4   0   0   
+6   W   h   e   e   l   1   6   O   
+t   t   a   w   a   6   C   a   n 
+a   d   a   45  4   1   1   1   3  
+9   8   2   4   8   1   5   3   5
+1   200
+
+# We read above datagram from left to right.
+
+# First 8 numbers are indicies of different regions in the datagram. If the number is 0 it means that the region does not exist for this EEPROM entry.
+# This area is called "header" and is followed by a number which serves as a 0 checksum to 256 padding. This effectievly means that adding all the numbers in
+# the header region (indicies 0-7) and padding number at index 8, should give us a zero checksum to 256.
+# Note that 0 checksum is used for each region as well and is a number at the end of that region.
+
+# Checking that zero checksum works correctly is important. There is a chance that the data becomes corrupt and before relying on the data that is on EEPROM
+# we need to validate if it is a data that was written there in the first place.
+
+# - The first region begins at index 9. 
+# - Each region contains mini entries. 
+# - Each entry starts with a number indiciating the length of that entry and then the entry itself. For example, at the beginning of the first region 
+#   we see 8 which means that the data has 8 elements to it (next 8 indicies are for this data).
+#   The data is 2, 0, 0, 8, 13, 4, 0, 0. This is a date (year, day, month, hr) when this component was manufactured. 
+#   Then we see number 6, which means that the next mini entry of this region has 6 elemetns to it. These are W, h, e, e, l, 1 which stand for the component 
+#   name that this EEPROM data refers to.
+#   Then comes the City mini-entry and Country mini-entry. Then region comes to an end with 7 value which is again 0 checksum padding. 
+# - Then the next region begins. Next region also have 2 mini-entires called tray id, which in the above case is 1, 1, 1, 3 and part ID which is 8, 2
+#   4, 8, 1, 5, 3, 5.
+# - Since in the header no other region exists our parsing of this datagram comes to an end.
+
+# The usage of header, regions, 0 checksums and every mini-entry starting with the length of the entry followed by the entry itself is same accross all
+# EEPROM entries. Furthermore, first 2 regions are present for all the EEPROM entries.
+
+# The remaining regions are up to the manufacturer to use as they deem necessary.
+
+# If you see a string like "W", "h" in the datagram to validate the 0 checksum use ord("W") to convert it to an integer and sum it up with the reamining values.
