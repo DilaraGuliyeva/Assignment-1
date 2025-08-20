@@ -51,7 +51,10 @@ class EEPROM:
     def checksum (self):
 
         header_check = False
+        length_check = True
+        adding_first_elem = True
         checksum = 0
+        dilara = 'KOD'
         temp_elem_for_add_dict = ""
         dictionary_eeprom_datas = {}
         dictionary_keys = ["date", "name", "city", "country", "trayID", "partID"]
@@ -67,18 +70,31 @@ class EEPROM:
                 steps = 0
 
                 for j in range(len(self.header_list)):
-                    temp = int(self.header_list[i][j]) # headerin 0ci icinde 0-ci indexdeki elem - 9 (ilk region)= temp
+                    temp_regions = int(self.header_list[i][j]) # headerin 0ci icinde 0-ci indexdeki elem - 9 (ilk region)= temp
 
-                    for x in range(temp+1,len(self.wheels_list[i])):
-                        temp_elem_for_add_dict += self.wheels_list[i][x]
-                        steps += 1
+                    for x in range(temp_regions,len(self.wheels_list[i])):
+                        if length_check == True and adding_first_elem == True:
+                            temp_for_length = self.wheels_list[i][x]
+                            dilara = "KOD"
+                            
+                        if adding_first_elem == False:
+                            temp_elem_for_add_dict += self.wheels_list[i][x]
+                            steps += 1
+                            length_check = False
 
-                        if steps == int(self.wheels_list[i][temp]):
+                        if steps == int(temp_for_length):
                             dictionary_eeprom_datas.update({dictionary_keys[keys_idx]:temp_elem_for_add_dict})
                             keys_idx += 1
                             temp_elem_for_add_dict = ""
                             steps = 0
-                            break
+                            length_check = True
+                            adding_first_elem = True
+                            dilara = "KOD1"
+                            x += 1
+                        
+                        if dilara == "KOD":
+                            adding_first_elem = False
+                            
 
             print(dictionary_eeprom_datas)
         
@@ -98,14 +114,7 @@ eeprom.checksum()
 
 
 
-# checksum = 0
-# region_idx_list = []
-# for i in range(len(wheels_list)):
-#     for elem_idx in range(len(wheels_list[i])):
-#         if elem_idx <=8:
-#             region_idx_list.append(wheels_list[i][elem_idx])
-            
-# print(wheels_list)
+
 
 
 
