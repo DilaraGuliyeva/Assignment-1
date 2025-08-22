@@ -37,13 +37,14 @@ class EEPROM:
                 content_elem = ""
                 
                 if count_for_split_wheel >= 2:
-                    idx +=1
+                    idx += 1
                     count_for_split_wheel = 0
         self.wheels_list[idx].append(content_elem)
 
         self.header_list = [inner[:9] for inner in self.wheels_list]
         
         #print(self.wheels_list)
+        
        
 
     def checksum (self):
@@ -60,46 +61,54 @@ class EEPROM:
         self.eeprom_datas_list =[]
         dictionary_keys = ["date", "name", "city", "country", "region_end_sum1","trayID", "partID","region_end_sum2"]
 
-        for i in range(len(self.header_list)): # 4 wheel ayrirmaq ucun
-            
-            for elem_idx in range(len(self.header_list[i])):  #her wheelin icini burdan baslayiram yoxlamaga
+        for hl_lists in range(len(self.header_list)): # 4 wheel ayrirmaq ucun
+            checksum_header = 0
+            dictionary_eeprom_datas = {}
+            for elem_hl_inside in range(len(self.header_list[hl_lists])):  #her wheelin icini burdan baslayiram yoxlamaga
                 
-                checksum_header += int(self.wheels_list[i][elem_idx])
+                checksum_header += int(self.header_list[hl_lists][elem_hl_inside])
 
-            if checksum_header % 256 == 0:
-                checksum_check = True
+            if checksum_header % 256 != 0:
+                
+                return(f"Wheel {hl_lists + 1} header checksum not correct") #adlandirmada wheel 1 olsun deye idx+1 var
+            
+            else:
                 keys_idx = 0
                 steps = 0
 
-                for j in range(len(self.header_list[i])-1):
+                for j in range(len(self.header_list[hl_lists])-1):
+                    checksum = 0
+                    adding_first_elem = True
+                    length_check = True
+                    steps = 0
+                    temp_elem_for_add_dict = ""
 
-                    regions_start = int(self.header_list[i][j]) # headerin 0ci icinde 0-ci indexdeki elem - 9 (ilk region)= temp
-                
-                    regions_end = int(self.header_list[i][j+1])    # header-dən sonrakı index
+                    regions_start = int(self.header_list[hl_lists][j]) # headerin 0ci icinde 0-ci indexdeki elem - 9 (ilk region)= temp
+                    
+                    regions_end = int(self.header_list[hl_lists][j+1])    # header-dən sonrakı index
 
                     if regions_end == 0:
-                        regions_end = len(self.wheels_list[i])   # əgər 0-dırsa, axıra qədər get
-
-                
+                            regions_end = len(self.wheels_list[hl_lists])   # əgər 0-dırsa, axıra qədər get
                     
-
+                    if regions_start != 0:
+                        
                         for x in range(regions_start,regions_end):
 
-                            if self.wheels_list[i][x].isdigit():
-                                checksum += int(self.wheels_list[i][x])
+                            if self.wheels_list[hl_lists][x].isdigit():
+                                checksum += int(self.wheels_list[hl_lists][x])
                             
                             else:
-                                checksum += ord(self.wheels_list[i][x])
+                                checksum += ord(self.wheels_list[hl_lists][x])
                             
                             
                             if j < 2:
                             
-                                if length_check == True and adding_first_elem == True:
-                                    temp_for_length = self.wheels_list[i][x]
+                                if length_check == True and adding_first_elem == True and x != regions_end:
+                                    temp_for_length = self.wheels_list[hl_lists][x]
                                     dilara = "KOD"
                                     
                                 if adding_first_elem == False:
-                                    temp_elem_for_add_dict += self.wheels_list[i][x]
+                                    temp_elem_for_add_dict += self.wheels_list[hl_lists][x]
                                     steps += 1
                                     length_check = False
 
@@ -114,9 +123,9 @@ class EEPROM:
                                     
                                 
                                 
-                                if x+1 == regions_end:
+                                if x == regions_end-1:
                                     
-                                    dictionary_eeprom_datas.update({dictionary_keys[keys_idx]:temp_for_length})
+                                    dictionary_eeprom_datas.update({dictionary_keys[keys_idx]:""})
                                     temp_elem_for_add_dict = "" 
                                     adding_first_elem = True
                                     dilara = "KOD1"
@@ -125,24 +134,18 @@ class EEPROM:
 
                                 if dilara == "KOD":
                                     adding_first_elem = False
+                    
+                  
+                        self.eeprom_datas_list.append(dictionary_eeprom_datas.copy())
 
-                        if checksum % 256 == 0:
-                            checksum_check = True
+                        if checksum % 256 != 0:
                             checksum = 0
-                        else:
-                            return(f"Wheel {i+1}, region{j+1} cheksum not correct")
                             
-            
-                self.eeprom_datas_list.append(dictionary_eeprom_datas)
-
-            else:
-                return(f"Wheel{i+1} header checksum not correct")
+                            return(f"Wheel {hl_lists + 1}, region{j + 1} cheksum not correct")
                 
-        return checksum_check
-    
+        return True
 
-
-    def compare_wheels_elements(self,eeprom_datas_list):
+    def compare_wheels_elements(self):
           
 
         keys_to_check = ["date", "city", "country", "partID"]
@@ -164,15 +167,10 @@ class EEPROM:
             return False
         
 
-
-
-
-        
-
-
 eeprom = EEPROM("/Users/dilara/Desktop/Dilara/Assignment1/colleague-file.log")
-eeprom.checksum()
-print(eeprom.compare_wheels_elements(eeprom.eeprom_datas_list))
+print(eeprom.checksum())
+
+print(eeprom.compare_wheels_elements())
 
 
 
